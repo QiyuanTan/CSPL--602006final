@@ -3,25 +3,35 @@ import pygame
 from gymnasium.utils import EzPickle
 import random
 
-from pettingzoo.mpe._mpe_utils.core import Agent, Landmark, World
+from pettingzoo.mpe._mpe_utils.core import Landmark, World
+from pettingzoo.mpe._mpe_utils.core import Agent as Raw_agent
 from pettingzoo.mpe._mpe_utils.scenario import BaseScenario
 from pettingzoo.mpe._mpe_utils.simple_env import SimpleEnv, make_env
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
+alphabet = ['fridge', 'air condition', 'heating', 'computer']
 
-alphabet = ['fridge','air condition','heating','computer']
+
+class Agent(Raw_agent):
+    def __init__(self):
+        super().__init__()
+        self.have_message = False
+
+    def __str__(self):
+        return self.name
+
 
 class raw_env(SimpleEnv, EzPickle):
     def __init__(
-        self,
-        num_good=2,
-        num_adversaries=4,
-        num_obstacles=1,
-        num_food=2,
-        max_cycles=25,
-        num_forests=2,
-        continuous_actions=False,
-        render_mode=None,
+            self,
+            num_good=2,
+            num_adversaries=4,
+            num_obstacles=1,
+            num_food=2,
+            max_cycles=25,
+            num_forests=2,
+            continuous_actions=False,
+            render_mode=None,
     ):
         EzPickle.__init__(
             self,
@@ -47,7 +57,30 @@ class raw_env(SimpleEnv, EzPickle):
             continuous_actions=continuous_actions,
         )
         self.metadata["name"] = "simple_world_comm_v3"
-        print(self.world)
+        self.message_holder = self.world.agents[0]
+
+    def send_message(self, agent1, agent2):
+        self.message_holder = agent2
+
+        agent1.color = (
+            np.array([1, 1, 1]))
+        agent2.color = (
+            np.array([0.95, 0.45, 0.45]))
+
+        text_line = 0
+        message = f'{agent1} sends message to {agent2}'
+        reply = f'{agent2} receives from {agent1}'
+        message_x_pos = self.width * 0.05
+        message_y_pos = self.height * 0.95 - (self.height * 0.05 * text_line)
+        self.game_font.render_to(
+            self.screen, (message_x_pos, message_y_pos), message, (0, 0, 0)
+        )
+        self.game_font.render_to(
+            self.screen, (message_x_pos, 10), reply, (0, 0, 0)
+        )
+        print(message)
+        print(reply)
+        text_line += 1
 
     def draw(self):
         # clear screen
@@ -56,9 +89,10 @@ class raw_env(SimpleEnv, EzPickle):
         # update bounds to center around agent
         all_poses = [entity.state.p_pos for entity in self.world.entities]
         cam_range = np.max(np.abs(np.array(all_poses)))
-
         # update geometry and text positions
         text_line = 0
+        self.send_message(self.message_holder, self.world.agents[random.randint(0, len(self.world.agents) - 1)])
+
         for e, entity in enumerate(self.world.entities):
             # geometry
             x, y = entity.state.p_pos
@@ -66,7 +100,7 @@ class raw_env(SimpleEnv, EzPickle):
                 -1
             )  # this makes the display mimic the old pyglet setup (ie. flips image)
             x = (
-                (x / cam_range) * self.width // 2 * 0.9
+                    (x / cam_range) * self.width // 2 * 0.9
             )  # the .9 is just to keep entities from appearing "too" out-of-bounds
             y = (y / cam_range) * self.height // 2 * 0.9
             x += self.width // 2
@@ -78,41 +112,8 @@ class raw_env(SimpleEnv, EzPickle):
                 self.screen, (0, 0, 0), (x, y), entity.size * 350, 1
             )  # borders
             assert (
-                0 < x < self.width and 0 < y < self.height
+                    0 < x < self.width and 0 < y < self.height
             ), f"Coordinates {(x, y)} are out of bounds."
-
-            # text
-            if isinstance(entity, Agent):
-                if entity.silent:
-                    continue
-                if np.all(entity.state.c == 0):
-                    word = "_"
-                elif self.continuous_actions:
-                    word = (
-                        "[" + ",".join([f"{comm:.2f}" for comm in entity.state.c]) + "]"
-                    )
-                else:
-                    word = alphabet[list(entity.state.c).index(1)]
-
-                message = entity.name + " gives order to " + word + "   "
-                reply = word + " receives from " + entity.name
-                message_x_pos = self.width * 0.05
-                message_y_pos = self.height * 0.95 - (self.height * 0.05 * text_line)
-                self.game_font.render_to(
-                    self.screen, (message_x_pos, message_y_pos), message, (0, 0, 0)
-                )
-                self.game_font.render_to(
-                    self.screen, (message_x_pos, 10), reply, (0, 0, 0)
-                )
-                #print(message)
-                #print(reply)
-                text_line += 1
-        for i, agent in enumerate(self.world.agents):
-            agent.color = (
-                np.array([random.random(), random.random(), random.random()])
-                if not agent.adversary
-                else np.array([0.95, 0.45, 0.45])
-            )
 
 
 env = make_env(raw_env)
@@ -121,12 +122,12 @@ parallel_env = parallel_wrapper_fn(env)
 
 class Scenario(BaseScenario):
     def make_world(
-        self,
-        num_good_agents=2,
-        num_adversaries=4,
-        num_landmarks=1,
-        num_food=2,
-        num_forests=2,
+            self,
+            num_good_agents=2,
+            num_adversaries=4,
+            num_landmarks=1,
+            num_food=2,
+            num_forests=2,
     ):
         world = World()
         # set any world properties first
@@ -145,7 +146,8 @@ class Scenario(BaseScenario):
             base_index = i - 1 if i < num_adversaries else i - num_adversaries
             base_index = 0 if base_index < 0 else base_index
             base_name = "adversary" if agent.adversary else "agent"
-            base_name = "Phone" if i == 0 else base_name
+            base_name = "leader" if i == 0 else base_name
+            agent.have_message = True if i == 0 else False
             agent.name = f"{base_name}_{base_index}"
             agent.collide = True
             agent.leader = True if i == 0 else False
@@ -213,11 +215,14 @@ class Scenario(BaseScenario):
     def reset_world(self, world, np_random):
         # random properties for agents
         for i, agent in enumerate(world.agents):
-            agent.color = (
-                np.array([1, 1, 1])
-                if not agent.adversary
-                else np.array([0.95, 0.45, 0.45])
-            )
+            if i == 0:
+                agent.color = agent.color = np.array([0.95, 0.95, 0.95])
+            else:
+                agent.color = (
+                    np.array([1, 1, 1])
+                    if not agent.adversary
+                    else np.array([0.95, 0.45, 0.45])
+                )
 
             # random properties for landmarks
         for i, landmark in enumerate(world.landmarks):
@@ -277,10 +282,10 @@ class Scenario(BaseScenario):
 
     def outside_boundary(self, agent):
         if (
-            agent.state.p_pos[0] > 1
-            or agent.state.p_pos[0] < -1
-            or agent.state.p_pos[1] > 1
-            or agent.state.p_pos[1] < -1
+                agent.state.p_pos[0] > 1
+                or agent.state.p_pos[0] < -1
+                or agent.state.p_pos[1] > 1
+                or agent.state.p_pos[1] < -1
         ):
             return True
         else:
@@ -315,10 +320,10 @@ class Scenario(BaseScenario):
         for food in world.food:
             if self.is_collision(agent, food):
                 rew += 2
-        rew -= 0.05 * min(
-            np.sqrt(np.sum(np.square(food.state.p_pos - agent.state.p_pos)))
-            for food in world.food
-        )
+
+        # rew -= 0.05 * min(
+        #     np.sqrt(np.sum(np.square(food.state.p_pos - agent.state.p_pos))) for food in world.food
+        # )
 
         return rew
 
@@ -467,4 +472,3 @@ class Scenario(BaseScenario):
                 + in_forest
                 + other_vel
             )
-
