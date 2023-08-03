@@ -2,14 +2,13 @@ import numpy as np
 import pygame
 from gymnasium.utils import EzPickle
 import random
+import pandas as pd
 
 from pettingzoo.mpe._mpe_utils.core import Landmark, World
-from pettingzoo.mpe._mpe_utils.core import Agent as Raw_agent
 from pettingzoo.mpe._mpe_utils.scenario import BaseScenario
+from pettingzoo.mpe._mpe_utils.core import Agent as Raw_agent
 from pettingzoo.mpe._mpe_utils.simple_env import SimpleEnv, make_env
 from pettingzoo.utils.conversions import parallel_wrapper_fn
-
-alphabet = ['fridge', 'air condition', 'heating', 'computer']
 
 
 class Agent(Raw_agent):
@@ -58,6 +57,7 @@ class raw_env(SimpleEnv, EzPickle):
         )
         self.metadata["name"] = "simple_world_comm_v3"
         self.message_holder = self.world.agents[0]
+        self.message_history = pd.DataFrame(columns=['sender', 'receiver'])
 
     def send_message(self, agent1, agent2):
         self.message_holder = agent2
@@ -70,6 +70,7 @@ class raw_env(SimpleEnv, EzPickle):
         text_line = 0
         message = f'{agent1} sends message to {agent2}'
         reply = f'{agent2} receives from {agent1}'
+
         message_x_pos = self.width * 0.05
         message_y_pos = self.height * 0.95 - (self.height * 0.05 * text_line)
         self.game_font.render_to(
@@ -78,9 +79,15 @@ class raw_env(SimpleEnv, EzPickle):
         self.game_font.render_to(
             self.screen, (message_x_pos, 10), reply, (0, 0, 0)
         )
+
+        tmp = pd.DataFrame([[agent1.name, agent2.name]], columns=['sender', 'receiver'])
+        self.message_history = pd.concat([self.message_history, tmp])
         print(message)
         print(reply)
         text_line += 1
+
+        for agent in self.agents:
+            self.infos[agent] = {'message_history.csv': self.message_history}
 
     def draw(self):
         # clear screen
@@ -114,6 +121,9 @@ class raw_env(SimpleEnv, EzPickle):
             assert (
                     0 < x < self.width and 0 < y < self.height
             ), f"Coordinates {(x, y)} are out of bounds."
+
+    def reset(self, seed=None, options=None):
+        super().reset(seed, options)
 
 
 env = make_env(raw_env)
