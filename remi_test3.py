@@ -10,14 +10,24 @@ from pettingzoo.mpe._mpe_utils.core import Agent as Raw_agent
 from pettingzoo.mpe._mpe_utils.simple_env import SimpleEnv, make_env
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
+MAX_RECEIVERS = 5
+LEVELS = [1 for _ in range(10)] + [2 for _ in range(10)] + [3 for _ in range(10)]
+
 
 class Agent(Raw_agent):
     def __init__(self):
         super().__init__()
-        self.have_message = False
+        # self.message_keys = [int]
+        self.level = None
 
     def __str__(self):
-        return self.name
+        return f'{self.name} level: {self.level}'
+
+    # def add_message(self, key):
+    #     self.message_keys.append(key)
+    #
+    # def remove_message(self, key):
+    #     self.message_keys.remove(key)
 
 
 class raw_env(SimpleEnv, EzPickle):
@@ -55,22 +65,44 @@ class raw_env(SimpleEnv, EzPickle):
             max_cycles=max_cycles,
             continuous_actions=continuous_actions,
         )
-        self.metadata["name"] = "simple_world_comm_v3"
-        self.message_holder = self.world.agents[0]
+        self.metadata["name"] = "custom_world_comm_v3"
         self.message_history = pd.DataFrame(columns=['sender', 'receiver'])
+        self.messages = dict[int, int]
+        sorted_agents = []
+        self.population = []
+        for level in range(1, 4):
+            sorted_agents.append([agent for agent in self.world.agents if agent.level == level])
 
-    def send_message(self, agent1, agent2):
-        self.message_holder = agent2
+        for a in sorted_agents:
+            if a[0].level == 1:
+                for i in range(10):
+                    self.population += a
 
-        agent1.color = (
-            np.array([1, 1, 1]))
-        agent2.color = (
-            np.array([0.95, 0.45, 0.45]))
+            if a[0].level == 2:
+                for i in range(10):
+                    self.population += a
+
+            if a[0].level == 3:
+                for i in range(10):
+                    self.population += a
+        print(self.population)
+
+    # simulates communication between agents
+    def transfer_message(self, agent1, agent2):
+        # changes color of the agents
+        # agent1.color = (
+        #     np.array([1, 1, 1]))
+        # agent2.color = (
+        #     np.array([0.95, 0.45, 0.45]))
+
+        # agent1.remove_message(message_key)
+        # agent2.add_message(message_key)
 
         text_line = 0
         message = f'{agent1} sends message to {agent2}'
         reply = f'{agent2} receives from {agent1}'
 
+        # presents the message on the screen
         message_x_pos = self.width * 0.05
         message_y_pos = self.height * 0.95 - (self.height * 0.05 * text_line)
         self.game_font.render_to(
@@ -80,12 +112,13 @@ class raw_env(SimpleEnv, EzPickle):
             self.screen, (message_x_pos, 10), reply, (0, 0, 0)
         )
 
+        # adds the message to the message history
         tmp = pd.DataFrame([[agent1.name, agent2.name]], columns=['sender', 'receiver'])
         self.message_history = pd.concat([self.message_history, tmp])
         print(message)
-        print(reply)
         text_line += 1
 
+        # saves the message to the infos dictionary
         for agent in self.agents:
             self.infos[agent] = {'message_history.csv': self.message_history}
 
@@ -98,7 +131,6 @@ class raw_env(SimpleEnv, EzPickle):
         cam_range = np.max(np.abs(np.array(all_poses)))
         # update geometry and text positions
         text_line = 0
-        self.send_message(self.message_holder, self.world.agents[random.randint(0, len(self.world.agents) - 1)])
 
         for e, entity in enumerate(self.world.entities):
             # geometry
@@ -122,6 +154,18 @@ class raw_env(SimpleEnv, EzPickle):
                     0 < x < self.width and 0 < y < self.height
             ), f"Coordinates {(x, y)} are out of bounds."
 
+        for agent in self.world.agents:
+            num_of_receivers = random.randint(0, MAX_RECEIVERS)
+            receivers = []
+            # adds the receivers to the list, receivers have higher level are more like to be chosen
+            while len(receivers) < num_of_receivers:
+                receiver = random.choice(self.population)
+                if receiver not in receivers and receiver != agent:
+                    receivers.append(receiver)
+
+            for r in receivers:
+                self.transfer_message(agent, r)
+
     def reset(self, seed=None, options=None):
         super().reset(seed, options)
 
@@ -140,15 +184,16 @@ class Scenario(BaseScenario):
             num_forests=2,
     ):
         world = World()
+
         # set any world properties first
         world.dim_c = 4
-        # world.damping = 1
         num_good_agents = num_good_agents
         num_adversaries = num_adversaries
         num_agents = num_adversaries + num_good_agents
         num_landmarks = num_landmarks
         num_food = num_food
         num_forests = num_forests
+
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
         for i, agent in enumerate(world.agents):
@@ -156,16 +201,17 @@ class Scenario(BaseScenario):
             base_index = i - 1 if i < num_adversaries else i - num_adversaries
             base_index = 0 if base_index < 0 else base_index
             base_name = "adversary" if agent.adversary else "agent"
-            base_name = "leader" if i == 0 else base_name
-            agent.have_message = True if i == 0 else False
+            base_name = base_name
+            agent.message_keys = True if i == 0 else False
             agent.name = f"{base_name}_{base_index}"
             agent.collide = True
-            agent.leader = True if i == 0 else False
             agent.silent = True if i > 0 else False
             agent.size = 0.075 if agent.adversary else 0.045
             agent.accel = 3.0 if agent.adversary else 4.0
-            # agent.accel = 20.0 if agent.adversary else 25.0
             agent.max_speed = 1.0 if agent.adversary else 1.3
+            agent.leader = False
+            agent.level = random.sample(LEVELS, 1)[0]
+
         # add landmarks
         world.landmarks = [Landmark() for i in range(num_landmarks)]
         for i, landmark in enumerate(world.landmarks):
@@ -223,7 +269,7 @@ class Scenario(BaseScenario):
         return boundary_list
 
     def reset_world(self, world, np_random):
-        # random properties for agents
+        # set the color of the agents
         for i, agent in enumerate(world.agents):
             if i == 0:
                 agent.color = agent.color = np.array([0.95, 0.95, 0.95])
