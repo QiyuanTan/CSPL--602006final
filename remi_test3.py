@@ -61,7 +61,10 @@ class raw_env(SimpleEnv, EzPickle):
         )
         self.metadata["name"] = "custom_world_comm_v3"
         self.message_history = pd.DataFrame(columns=['sender', 'receiver'])
-        self.levels = {agent.name: agent.level for agent in self.world.agents}
+        self.levels = []
+        for agent in self.world.agents:
+            self.levels.append([agent.name, agent.level])
+        print(self.levels)
         self.messages = dict[int, int]
         sorted_agents = []
         self.population = []
@@ -80,7 +83,6 @@ class raw_env(SimpleEnv, EzPickle):
             if a[0].level == 3:
                 for i in range(7):
                     self.population += a
-        print(self.population)
 
     # simulates communication between agents
     def transfer_message(self, agent1, agent2):
