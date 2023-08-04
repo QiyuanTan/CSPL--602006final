@@ -1,7 +1,8 @@
 import time
 import remi_test4
+import re
 
-env = remi_test4.env(num_good=100, num_adversaries=0, num_obstacles=0, num_food=0, max_cycles=5e1, num_forests=0,
+env = remi_test4.env(num_good=10, num_adversaries=0, num_obstacles=0, num_food=0, max_cycles=5e1, num_forests=0,
                      render_mode='human')
 env.reset()
 
@@ -22,5 +23,12 @@ for agent in env.agent_iter():
     # time.sleep(0.5)
 env.close()
 
-message_history.to_csv('message_history.csv')
-message_history
+message_history.to_csv('message_history.csv', index=False)
+# read the csv file and reformat it with regular expressions
+context = open('message_history.csv', 'r').read().replace('sender,receiver\n', '').replace(',', ';').replace('agent_',
+                                                                                                             '')
+
+# write the csv file
+with open('reformatted_message_history.csv', 'w') as f:
+    f.write(context)
+    f.close()

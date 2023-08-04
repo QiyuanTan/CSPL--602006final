@@ -115,7 +115,7 @@ class raw_env(SimpleEnv, EzPickle):
         # adds the message to the message history
         tmp = pd.DataFrame([[agent1.name, agent2.name]], columns=['sender', 'receiver'])
         self.message_history = pd.concat([self.message_history, tmp])
-        print(message)
+        # print(message)
         text_line += 1
 
         # saves the message to the infos dictionary
