@@ -10,7 +10,7 @@ from pettingzoo.mpe._mpe_utils.core import Agent as Raw_agent
 from pettingzoo.mpe._mpe_utils.simple_env import SimpleEnv, make_env
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
-MAX_RECEIVERS = 3
+MAX_RECEIVERS = 2
 LEVELS = [1 for _ in range(6)] + [2 for _ in range(3)] + [3 for _ in range(1)]
 
 
