@@ -127,7 +127,7 @@ class raw_env(SimpleEnv, EzPickle):
             self.screen, (0, 0, 0), pos(self, agent1), pos(self, agent2), 3
         )
 
-        time.sleep(0.01)
+        time.sleep(0.001)
 
     def draw(self):
         self.text_line = 0

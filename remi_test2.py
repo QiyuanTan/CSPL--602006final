@@ -2,7 +2,7 @@ import time
 import remi_test4
 import re
 
-env = remi_test4.env(num_good=10, num_adversaries=0, num_obstacles=0, num_food=0, max_cycles=5e1, num_forests=0,
+env = remi_test4.env(num_good=10, num_adversaries=0, num_obstacles=0, num_food=0, max_cycles=5e2, num_forests=0,
                      render_mode='human')
 env.reset()
 
