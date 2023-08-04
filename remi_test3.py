@@ -11,7 +11,7 @@ from pettingzoo.mpe._mpe_utils.simple_env import SimpleEnv, make_env
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
 MAX_RECEIVERS = 5
-LEVELS = [1 for _ in range(10)] + [2 for _ in range(10)] + [3 for _ in range(10)]
+LEVELS = [1 for _ in range(6)] + [2 for _ in range(3)] + [3 for _ in range(1)]
 
 
 class Agent(Raw_agent):
@@ -22,12 +22,6 @@ class Agent(Raw_agent):
 
     def __str__(self):
         return f'{self.name} level: {self.level}'
-
-    # def add_message(self, key):
-    #     self.message_keys.append(key)
-    #
-    # def remove_message(self, key):
-    #     self.message_keys.remove(key)
 
 
 class raw_env(SimpleEnv, EzPickle):
@@ -75,29 +69,20 @@ class raw_env(SimpleEnv, EzPickle):
 
         for a in sorted_agents:
             if a[0].level == 1:
-                for i in range(10):
+                for i in range(2):
                     self.population += a
 
             if a[0].level == 2:
-                for i in range(10):
+                for i in range(3):
                     self.population += a
 
             if a[0].level == 3:
-                for i in range(10):
+                for i in range(5):
                     self.population += a
         print(self.population)
 
     # simulates communication between agents
     def transfer_message(self, agent1, agent2):
-        # changes color of the agents
-        # agent1.color = (
-        #     np.array([1, 1, 1]))
-        # agent2.color = (
-        #     np.array([0.95, 0.45, 0.45]))
-
-        # agent1.remove_message(message_key)
-        # agent2.add_message(message_key)
-
         text_line = 0
         message = f'{agent1} sends message to {agent2}'
         reply = f'{agent2} receives from {agent1}'
