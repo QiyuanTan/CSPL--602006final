@@ -69,15 +69,15 @@ class raw_env(SimpleEnv, EzPickle):
 
         for a in sorted_agents:
             if a[0].level == 1:
-                for i in range(2):
+                for i in range(1):
                     self.population += a
 
             if a[0].level == 2:
-                for i in range(3):
+                for i in range(2):
                     self.population += a
 
             if a[0].level == 3:
-                for i in range(5):
+                for i in range(7):
                     self.population += a
         print(self.population)
 
