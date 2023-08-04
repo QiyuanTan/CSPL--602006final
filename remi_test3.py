@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import pygame
 from gymnasium.utils import EzPickle
@@ -21,7 +23,23 @@ class Agent(Raw_agent):
         self.level = None
 
     def __str__(self):
-        return f'{self.name} level: {self.level}'
+        return f'{self.name}'
+
+
+def pos(self, agent):
+    all_poses = [entity.state.p_pos for entity in self.world.entities]
+    cam_range = np.max(np.abs(np.array(all_poses)))
+    x, y = agent.state.p_pos
+    y *= (
+        -1
+    )  # this makes the display mimic the old pyglet setup (ie. flips image)
+    x = (
+            (x / cam_range) * self.width // 2 * 0.9
+    )  # the .9 is just to keep entities from appearing "too" out-of-bounds
+    y = (y / cam_range) * self.height // 2 * 0.9
+    x += self.width // 2
+    y += self.height // 2
+    return (x, y)
 
 
 class raw_env(SimpleEnv, EzPickle):
@@ -86,31 +104,33 @@ class raw_env(SimpleEnv, EzPickle):
 
     # simulates communication between agents
     def transfer_message(self, agent1, agent2):
-        text_line = 0
         message = f'{agent1} sends message to {agent2}'
-        reply = f'{agent2} receives from {agent1}'
 
         # presents the message on the screen
         message_x_pos = self.width * 0.05
-        message_y_pos = self.height * 0.95 - (self.height * 0.05 * text_line)
+        message_y_pos = self.height * 0.95 - (self.height * 0.05 * self.text_line)
         self.game_font.render_to(
             self.screen, (message_x_pos, message_y_pos), message, (0, 0, 0)
-        )
-        self.game_font.render_to(
-            self.screen, (message_x_pos, 10), reply, (0, 0, 0)
         )
 
         # adds the message to the message history
         tmp = pd.DataFrame([[agent1.name, agent2.name]], columns=['sender', 'receiver'])
         self.message_history = pd.concat([self.message_history, tmp])
         # print(message)
-        text_line += 1
+        self.text_line += 1
 
         # update info
         for agent in self.agents:
             self.infos[agent] = {'message_history': self.message_history, 'levels': self.levels}
 
+        pygame.draw.line(
+            self.screen, (0, 0, 0), pos(self, agent1), pos(self, agent2), 3
+        )
+
+        time.sleep(0.01)
+
     def draw(self):
+        self.text_line = 0
         # clear screen
         self.screen.fill((255, 255, 255))
 
