@@ -61,6 +61,7 @@ class raw_env(SimpleEnv, EzPickle):
         )
         self.metadata["name"] = "custom_world_comm_v3"
         self.message_history = pd.DataFrame(columns=['sender', 'receiver'])
+        self.levels = {agent.name: agent.level for agent in self.world.agents}
         self.messages = dict[int, int]
         sorted_agents = []
         self.population = []
@@ -103,9 +104,9 @@ class raw_env(SimpleEnv, EzPickle):
         # print(message)
         text_line += 1
 
-        # saves the message to the infos dictionary
+        # update info
         for agent in self.agents:
-            self.infos[agent] = {'message_history.csv': self.message_history}
+            self.infos[agent] = {'message_history': self.message_history, 'levels': self.levels}
 
     def draw(self):
         # clear screen
