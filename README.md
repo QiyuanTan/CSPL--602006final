@@ -1,11 +1,10 @@
 # CSPL--602006final
 
-This project is aimed at proving the theory in Motif-based PageRank(github: https://github.com/HKUST-KnowComp/Motif-based-PageRank.git)
-We make use of pettingZoo to create the similar environment according to the description in the essay "Ranking Users in Social Networks with Higher-Order Structures" for collecting the data from this environment. And we use the data to test the algorithm in Motif-based PageRank.
+This project is aimed at proving the theory and algorithmic feasibility in Motif-based PageRank(github: https://github.com/HKUST-KnowComp/Motif-based-PageRank.git) We make use of pettingZoo to create the similar environment according to the description in the essay "Ranking Users in Social Networks with Higher-Order Structures" for collecting the data from this environment. Furthermore, we reproduce the PageRank Algorithm Code and use the data to test its feasibility.
 
-graph.py: make use of the data collected ftom the environment based on petting Zoo
+graph.py: make use of the data collected from the environment based on petting Zoo
 
-levels.csv: data collected from petting Zoo which decides theb level of agent
+levels.csv: data collected from petting Zoo which decides the data level of agent
 
 main.py: code for collecting data from environment
 
