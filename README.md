@@ -34,6 +34,8 @@ Yi Li: reproduce the PageRank algorithm，use the data collected provided to mak
 Eric Tan: create the environment by pettingZoo, collect necessary data according to requirements
 Akaley Weng: analyses the thesis and find the necessary environmental elements
 
+### Paper 
+The paper: https://doi.org/10.54097/zsfnjk16 is based on this project
 
 ### Reference：
 Pagerank essay can be found here:
