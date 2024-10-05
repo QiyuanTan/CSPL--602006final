@@ -41,7 +41,7 @@ The paper: https://doi.org/10.54097/zsfnjk16 is based on this project
 Pagerank essay can be found here:
 https://aaai.org/papers/11287-ranking-users-in -social-networks-with-higher-order-structures/
 Our code is accessible by:
-https://github.com/tanqiyuaneric/CSPL-- \602006final/blob/main/main.ipynb
+https://github.com/QiyuanTan/CSPL-- \602006final/blob/main/main.ipynb
 Pagerank code is available here:
 https://github.com/HKUST-KnowComp/Motif-based-PageRank.git
 
